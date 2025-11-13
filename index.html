@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camistry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: white;
+            min-height: 90vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0px 0px 14px rgba(255, 255, 255, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .webcam-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .webcam-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #a8e6ff;
+        }
+
+        .webcam-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .webcam-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        #webcam {
+            width: 100%;
+            max-width: 640px;
+            height: 480px;
+            background-color: #0a2a43;
+            border-radius: 10px;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .timer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .timer-overlay.active {
+            opacity: 1;
+        }
+
+        .timer-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(0, 168, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: pulse-timer 1s infinite;
+        }
+
+        @keyframes pulse-timer {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .timer-text {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 168, 255, 0.8);
+        }
+
+        .photo-counter {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            z-index: 5;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: 2px solid white;
+            border-radius: 10px;
+            background: linear-gradient(to right, #00a8ff, #0097e6);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(to right, #0097e6, #00a8ff);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        /* Tampilan default captured photos */
+        .captured-photos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .captured-photos {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Tampilan quadcam */
+        .captured-photos.quadcam-view {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 0;
+            border: 3px solid white;
+            border-radius: 0;
+            overflow: hidden;
+            width: 100%;
+            max-width: 720px;
+            height: 480px;
+            margin: 20px auto 0;
+            margin-bottom: 20px;
+        }
+
+        .captured-photos.quadcam-view .captured-photo {
+            border-radius: 0;
+            border: 3px solid white;
+            height: 100%;
+            transform: scaleX(1);
+        }
+
+        .captured-photo {
+            width: 100%;
+            height: 150px;
+            border-radius: 0;
+            object-fit: cover;
+            border: 2px solid white;
+            transform: scaleX(1);
+            transition: all 0.3s ease;
+        }
+
+       
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .fish {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            background-color: #ff9f43;
+            border-radius: 50% 50% 50% 0;
+            animation: swim 15s linear infinite;
+            z-index: 3;
+        }
+
+        .fish::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background-color: #ff9f43;
+            border-radius: 50%;
+        }
+
+        .fish::after {
+            content: "";
+            position: absolute;
+            top: 8px;
+            right: -10px;
+            width: 15px;
+            height: 5px;
+            background-color: #ff9f43;
+            border-radius: 50% 0 0 50%;
+        }
+
+        @keyframes swim {
+            0% {
+                transform: translateX(-50px) scaleX(1);
+            }
+            49% {
+                transform: translateX(calc(100vw + 50px)) scaleX(1);
+            }
+            50% {
+                transform: translateX(calc(100vw + 50px)) scaleX(-1);
+            }
+            99% {
+                transform: translateX(-50px) scaleX(-1);
+            }
+            100% {
+                transform: translateX(-50px) scaleX(1);
+            }
+        }
+
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 8s infinite ease-in-out;
+            z-index: 2;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        @keyframes flash {
+            0% { opacity: 0; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0; }
+        }
+
+        .completed-message {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 168, 255, 0.2);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(0, 168, 255, 0.5);
+        }
+
+        .switch-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+            margin-bottom: 12px;
+        }
+
+        .view-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .switch-btn {
+            background: linear-gradient(to right, #00a8ff, #0097e6) !important;
+        }
+
+        .switch-btn:hover {
+            background: linear-gradient(to right, #00a8ff, #0097e6) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Camistry</h1>
+            <p class="subtitle">Ambil 4 foto secara otomatis dengan pose berbeda</p>
+        </header>
+
+        <div class="webcam-section">
+            <div class="webcam-container">
+                <div class="webcam-wrapper">
+                    <div class="photo-counter" id="photoCounter">Foto: 0/4</div>
+                    <video id="webcam" autoplay playsinline></video>
+                    <div class="timer-overlay" id="timerOverlay">
+                        <div class="timer-circle">
+                            <div class="timer-text" id="timerText">3</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button id="startWebcam">Mulai Webcam</button>
+                    <button id="captureSequence">Ambil 4 Foto</button>
+                    <button id="resetPhotos">Reset Semua</button>
+                </div>
+                <div class="message" id="message">
+                    Tekan "Mulai Webcam" untuk memulai, lalu "Ambil 4 Foto" untuk mengambil foto secara otomatis
+                </div>
+                <div id="completedMessage" class="completed-message" style="display: none;">
+                    4 foto telah selesai diambil!
+                </div>
+                
+                <!-- Switch Controls - Selalu Tampil -->
+                <div class="switch-controls" id="switchControls">
+                    <button id="switchToGrid" class="switch-btn">Tampilan Grid</button>
+                    <button id="switchToQuadcam" class="switch-btn">Tampilan Quadcam</button>
+                </div>
+
+              
+
+                <div class="captured-photos" id="capturedPhotos">
+                    <!-- Foto yang diambil akan muncul di sini -->
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Webcam Tema Lautan - Camistry &copy; 2023 - By 2.shinnra</p>
+        </footer>
+    </div>
+
+    <div class="flash" id="flash"></div>
+
+    <script>
+        // Elemen DOM
+        const webcamElement = document.getElementById('webcam');
+        const startWebcamButton = document.getElementById('startWebcam');
+        const captureSequenceButton = document.getElementById('captureSequence');
+        const resetPhotosButton = document.getElementById('resetPhotos');
+        const messageElement = document.getElementById('message');
+        const completedMessageElement = document.getElementById('completedMessage');
+        const timerOverlay = document.getElementById('timerOverlay');
+        const timerText = document.getElementById('timerText');
+        const flashElement = document.getElementById('flash');
+        const photoCounter = document.getElementById('photoCounter');
+        const capturedPhotosContainer = document.getElementById('capturedPhotos');
+        const switchControls = document.getElementById('switchControls');
+        const switchToGridButton = document.getElementById('switchToGrid');
+        const switchToQuadcamButton = document.getElementById('switchToQuadcam');
+        const viewInfo = document.getElementById('viewInfo');
+        
+        let stream = null;
+        let currentPhoto = 0;
+        const totalPhotos = 4;
+        let isCapturing = false;
+        let currentView = 'grid'; // 'grid' or 'quadcam'
+
+        // Fungsi untuk memulai webcam
+        async function startWebcam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcamElement.srcObject = stream;
+                startWebcamButton.disabled = true;
+                captureSequenceButton.disabled = false;
+                resetPhotosButton.disabled = false;
+                messageElement.textContent = "Webcam aktif. Tekan 'Ambil 4 Foto' untuk mengambil foto secara otomatis.";
+                
+                // Aktifkan tombol switch
+                switchToGridButton.disabled = false;
+                switchToQuadcamButton.disabled = false;
+                
+                // Tambahkan efek gelembung
+                createBubbles();
+            } catch (err) {
+                console.error("Error mengakses webcam: ", err);
+                messageElement.textContent = "Tidak dapat mengakses webcam. Pastikan Anda memberikan izin.";
+            }
+        }
+
+        // Fungsi untuk mengambil 4 foto secara berurutan
+        function captureSequence() {
+            if (isCapturing) return;
+            
+            isCapturing = true;
+            captureSequenceButton.disabled = true;
+            currentPhoto = 0;
+            
+            messageElement.textContent = "Mempersiapkan pengambilan 4 foto...";
+            
+            // Mulai proses pengambilan foto berurutan
+            setTimeout(() => {
+                captureNextPhoto();
+            }, 1000);
+        }
+
+        // Fungsi untuk mengambil foto berikutnya
+        function captureNextPhoto() {
+            if (currentPhoto >= totalPhotos) {
+                // Semua foto telah diambil
+                isCapturing = false;
+                
+                // Nonaktifkan tombol Ambil 4 Foto
+                captureSequenceButton.disabled = true;
+                
+                // Tampilkan pesan selesai
+                messageElement.style.display = 'none';
+                completedMessageElement.style.display = 'block';
+                
+                return;
+            }
+            
+            // Update counter
+            currentPhoto++;
+            photoCounter.textContent = `Foto: ${currentPhoto}/${totalPhotos}`;
+            
+            // Mulai timer untuk foto ini
+            startCountdown();
+        }
+
+        // Fungsi untuk timer countdown
+        function startCountdown() {
+            let countdown = 3;
+            timerText.textContent = countdown;
+            timerOverlay.classList.add('active');
+            
+            messageElement.textContent = `Siap untuk foto ${currentPhoto}! Berpose sekarang...`;
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                timerText.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    timerOverlay.classList.remove('active');
+                    
+                    // Ambil foto setelah timer selesai
+                    takePhoto();
+                    
+                    // Lanjut ke foto berikutnya setelah jeda 1 detik
+                    setTimeout(() => {
+                        captureNextPhoto();
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        // Fungsi untuk mengambil foto
+        function takePhoto() {
+            // Efek flash
+            flashElement.style.animation = 'flash 0.3s';
+            setTimeout(() => {
+                flashElement.style.animation = '';
+            }, 300);
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            // Set ukuran canvas sesuai dengan video
+            canvas.width = webcamElement.videoWidth;
+            canvas.height = webcamElement.videoHeight;
+            
+            // Gambar frame video ke canvas (dibalik agar sesuai dengan tampilan webcam)
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1);
+            context.drawImage(webcamElement, 0, 0, canvas.width, canvas.height);
+            
+            // Konversi canvas ke data URL
+            const dataURL = canvas.toDataURL('image/png');
+            
+            // Buat elemen gambar baru
+            const imgElement = document.createElement('img');
+            imgElement.src = dataURL;
+            imgElement.classList.add('captured-photo');
+            
+            // Tambahkan gambar ke container
+            capturedPhotosContainer.appendChild(imgElement);
+            
+            messageElement.textContent = `Foto ${currentPhoto} telah diambil! ${currentPhoto < totalPhotos ? 'Bersiap untuk foto berikutnya...' : ''}`;
+        }
+
+        // Fungsi untuk mereset semua foto
+        function resetPhotos() {
+            // Hapus semua foto
+            capturedPhotosContainer.innerHTML = '';
+            
+            // Reset variabel
+            currentPhoto = 0;
+            photoCounter.textContent = `Foto: 0/${totalPhotos}`;
+            
+            // Aktifkan tombol ambil foto jika webcam sedang berjalan
+            if (stream) {
+                captureSequenceButton.disabled = false;
+            }
+            
+            // Sembunyikan pesan selesai, tampilkan pesan normal
+            completedMessageElement.style.display = 'none';
+            messageElement.style.display = 'block';
+            messageElement.textContent = "Semua foto telah direset. Anda dapat mengambil 4 foto baru.";
+            
+            // Kembalikan ke tampilan grid
+            switchToGridView();
+        }
+
+        // Fungsi untuk switch ke tampilan grid
+        function switchToGridView() {
+            capturedPhotosContainer.classList.remove('quadcam-view');
+            currentView = 'grid';
+            switchToGridButton.disabled = true;
+            switchToQuadcamButton.disabled = false;
+        }
+
+        // Fungsi untuk switch ke tampilan quadcam
+        function switchToQuadcamView() {
+            capturedPhotosContainer.classList.add('quadcam-view');
+            currentView = 'quadcam';
+            switchToGridButton.disabled = false;
+            switchToQuadcamButton.disabled = true;
+        }
+
+        // Fungsi untuk membuat gelembung
+        function createBubbles() {
+            const bubblesContainer = document.querySelector('.webcam-section');
+            
+            // Hapus gelembung lama
+            const oldBubbles = document.querySelectorAll('.bubble');
+            oldBubbles.forEach(bubble => bubble.remove());
+            
+            // Buat gelembung baru
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const bubble = document.createElement('div');
+                    bubble.classList.add('bubble');
+                    
+                    // Ukuran acak
+                    const size = Math.random() * 30 + 10;
+                    bubble.style.width = `${size}px`;
+                    bubble.style.height = `${size}px`;
+                    
+                    // Posisi acak
+                    const left = Math.random() * 100;
+                    bubble.style.left = `${left}%`;
+                    
+                    // Animasi delay acak
+                    const delay = Math.random() * 5;
+                    bubble.style.animationDelay = `${delay}s`;
+                    
+                    bubblesContainer.appendChild(bubble);
+                }, i * 200);
+            }
+        }
+
+        // Event listeners
+        startWebcamButton.addEventListener('click', startWebcam);
+        captureSequenceButton.addEventListener('click', captureSequence);
+        resetPhotosButton.addEventListener('click', resetPhotos);
+        switchToGridButton.addEventListener('click', switchToGridView);
+        switchToQuadcamButton.addEventListener('click', switchToQuadcamView);
+
+        // Nonaktifkan tombol saat pertama kali dimuat
+        captureSequenceButton.disabled = true;
+        resetPhotosButton.disabled = true;
+        
+        // Tombol switch tetap aktif dari awal
+        switchToGridButton.disabled = true; // Grid sebagai default
+        switchToQuadcamButton.disabled = false;
+
+        // Tambahkan beberapa ikan animasi
+        function createFish() {
+            const bubblesContainer = document.querySelector('.webcam-section');
+            
+            for (let i = 0; i < 3; i++) {
+                const fish = document.createElement('div');
+                fish.classList.add('fish');
+                
+                // Posisi acak
+                const top = Math.random() * 80 + 10;
+                fish.style.top = `${top}%`;
+                
+                // Delay acak
+                const delay = Math.random() * 10;
+                fish.style.animationDelay = `${delay}s`;
+                
+                // Warna acak
+                const colors = ['#ff9f43', '#ff6b6b', '#48dbfb', '#1dd1a1', '#f368e0'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                fish.style.backgroundColor = randomColor;
+                
+                bubblesContainer.appendChild(fish);
+            }
+        }
+
+        // Panggil fungsi untuk membuat ikan saat halaman dimuat
+        window.addEventListener('load', createFish);
+    </script>
+</body>
+</html>
